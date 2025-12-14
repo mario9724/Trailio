@@ -5,5 +5,5 @@
   "description": "Tráilers desde TMDb (mismo idioma que la metadata)",
   "resources": ["stream"],
   "types": ["movie"],
-  "idPrefixes": ["tmdb:"]
+  "idPrefixes": [""]
 }
