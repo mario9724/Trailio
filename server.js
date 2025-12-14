@@ -9,11 +9,10 @@ const PORT = process.env.PORT || 3000;
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_LANGUAGE = process.env.TMDB_LANGUAGE || 'es-ES';
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Función: convertir IMDb ID -> TMDb ID
+// Convertir IMDb ID -> TMDb ID
 async function imdbToTmdbId(imdbId) {
   try {
     const url = `https://api.themoviedb.org/3/find/${imdbId}`;
@@ -40,7 +39,7 @@ async function imdbToTmdbId(imdbId) {
   }
 }
 
-// Función: obtener tráiler de TMDb por TMDb ID
+// Obtener tráiler de TMDb (YouTube)
 async function getTrailerFromTmdb(tmdbId, language) {
   try {
     const url = `https://api.themoviedb.org/3/movie/${tmdbId}/videos`;
@@ -51,11 +50,8 @@ async function getTrailerFromTmdb(tmdbId, language) {
       }
     });
 
-    if (!data.results || !data.results.length) {
-      return null;
-    }
+    if (!data.results || !data.results.length) return null;
 
-    // Priorizar oficial / tipo Trailer en YouTube
     const officialTrailer = data.results.find(
       v =>
         v.site === 'YouTube' &&
@@ -82,12 +78,12 @@ const manifest = {
   idPrefixes: ['tt', 'tmdb:']
 };
 
-// Ruta manifest
+// Manifest
 app.get('/manifest.json', (req, res) => {
   res.json(manifest);
 });
 
-// Ruta stream
+// Streams
 app.get('/stream/:type/:id.json', async (req, res) => {
   const { type, id } = req.params;
   console.log('Petición Trailio:', type, id);
@@ -98,12 +94,9 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
   let tmdbId = null;
 
-  // Si ya viene tmdb:1234
   if (id.startsWith('tmdb:')) {
     tmdbId = id.replace('tmdb:', '');
-  }
-  // IMDb: tt1234567
-  else if (id.startsWith('tt')) {
+  } else if (id.startsWith('tt')) {
     tmdbId = await imdbToTmdbId(id);
   } else {
     return res.json({ streams: [] });
@@ -114,9 +107,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
   }
 
   try {
-    // 1º idioma configurado
     let trailer = await getTrailerFromTmdb(tmdbId, TMDB_LANGUAGE);
-    // fallback a inglés
     if (!trailer) {
       trailer = await getTrailerFromTmdb(tmdbId, 'en-US');
     }
@@ -135,10 +126,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
       streams: [
         {
           title: `Tráiler: ${title}`,
-          url: `https://www.youtube.com/watch?v=${youtubeKey}`,
-          behaviorHints: {
-            notWebReady: true
-          }
+          ytId: youtubeKey
         }
       ]
     });
@@ -153,7 +141,6 @@ app.get('/', (req, res) => {
   res.send('Trailio addon activo');
 });
 
-// Arranque local
 app.listen(PORT, () => {
   console.log(`Trailio escuchando en puerto ${PORT}`);
 });
