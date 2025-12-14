@@ -1,0 +1,34 @@
+{
+  "id": "trailerio.strem",
+  "version": "1.0.0",
+  "name": "Trailio",
+  "description": "Tráilers oficiales de YouTube (cada usuario usa su API key)",
+  "resources": ["stream"],
+  "types": ["movie", "series"],
+  "idPrefixes": ["tmdb:"],
+  "behaviorHints": {
+    "configurable": true
+  },
+  "config": {
+    "youtubeApiKey": {
+      "title": "YouTube API Key (console.cloud.google.com)",
+      "type": "input",
+      "default": "",
+      "hidden": false
+    },
+    "trailerLanguage": {
+      "title": "Idioma del tráiler",
+      "type": "select",
+      "default": "es-ES",
+      "options": [
+        { "title": "Español (España)", "value": "es-ES" },
+        { "title": "Español (Latino)", "value": "es-LA" },
+        { "title": "Inglés", "value": "en-US" },
+        { "title": "Francés", "value": "fr-FR" },
+        { "title": "Alemán", "value": "de-DE" },
+        { "title": "Italiano", "value": "it-IT" },
+        { "title": "Portugués", "value": "pt-BR" }
+      ]
+    }
+  }
+}
