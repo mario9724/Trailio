@@ -9,7 +9,7 @@ const manifest = {
   id: "trailio-addon",
   version: "1.0.0",
   name: "Trailer", // nombre fijo que muestra Stremio
-  description: "Addon for trailer search",
+  description: "Addon for trailers search",
   types: ["movie", "series"],
   catalogs: [],
   resources: ["stream"],
