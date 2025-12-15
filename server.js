@@ -98,7 +98,7 @@ app.get('/manifest.json', (req, res) => {
   });
 });
 
-// Función auxiliar: obtener tráiler de TMDb para un IMDb id
+// Función auxiliar: obtener URL de tráiler de TMDb para un IMDb id
 async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
   const language = lang || 'en-US';
 
@@ -134,7 +134,6 @@ async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
 
   if (!videosJson.results || !videosJson.results.length) return null;
 
-  // Priorizar trailers de YouTube
   const trailer =
     videosJson.results.find(
       v =>
@@ -145,14 +144,10 @@ async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
   if (!trailer || trailer.site !== 'YouTube' || !trailer.key) return null;
 
   const youtubeUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
-
-  return {
-    title: trailer.name || 'Trailer',
-    externalUrl: youtubeUrl
-  };
+  return youtubeUrl;
 }
 
-// /stream usando la clave TMDb y devolviendo el tráiler
+// /stream usando la clave TMDb y devolviendo el tráiler con url
 app.get('/stream/:type/:id.json', async (req, res) => {
   const { type, id } = req.params; // type: movie|series, id: tt1234567
   const { tmdbKey, lang } = req.query;
@@ -162,22 +157,22 @@ app.get('/stream/:type/:id.json', async (req, res) => {
   }
 
   try {
-    const trailer = await getTrailerFromTmdb({
+    const youtubeUrl = await getTrailerFromTmdb({
       imdbId: id,
       type,
       tmdbKey,
       lang
     });
 
-    if (!trailer) {
+    if (!youtubeUrl) {
       return res.json({ streams: [] });
     }
 
     res.json({
       streams: [
         {
-          title: trailer.title,
-          externalUrl: trailer.externalUrl
+          title: "Trailio trailer",
+          url: youtubeUrl
         }
       ]
     });
