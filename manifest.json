@@ -1,9 +1,10 @@
 {
-  "id": "trailerio.strem",
-  "version": "1.0.0",
-  "name": "Trailio",
-  "description": "Tráilers desde TMDb (mismo idioma que la metadata)",
+  "id": "org.trailio.trailers",
+  "version": "1.2.0",
+  "name": "Trailio Trailers",
+  "description": "Tráilers de YouTube usando TMDb (películas y series)",
+  "types": ["movie", "series"],
+  "catalogs": [],
   "resources": ["stream"],
-  "types": ["movie"],
-  "idPrefixes": [""]
+  "idPrefixes": ["tt", "tmdb:"]
 }
