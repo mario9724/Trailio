@@ -8,8 +8,8 @@ const PORT = process.env.PORT || 3000;
 const manifest = {
   id: "trailio-addon",
   version: "1.0.0",
-  name: "Tráiler", // nombre fijo que muestra Stremio
-  description: "Addon de Stremio para buscar trailers en TMDb con clave por usuario",
+  name: "Trailer", // nombre fijo que muestra Stremio
+  description: "Addon for trailer search",
   types: ["movie", "series"],
   catalogs: [],
   resources: ["stream"],
