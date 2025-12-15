@@ -165,7 +165,7 @@ async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
   };
 }
 
-// /stream usando la clave TMDb y devolviendo el tráiler con el título pedido
+// /stream usando la clave TMDb y devolviendo externalUrl
 app.get('/stream/:type/:id.json', async (req, res) => {
   const { type, id } = req.params; // type: movie|series, id: tt1234567 o tt1234567:1:1
   const { tmdbKey, lang } = req.query;
@@ -203,7 +203,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
       streams: [
         {
           title: streamTitle,
-          url: url
+          externalUrl: url   // <‑‑ vuelve a externalUrl
         }
       ]
     });
