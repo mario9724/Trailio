@@ -7,8 +7,8 @@ const PORT = process.env.PORT || 3000;
 // Manifest base
 const manifest = {
   id: "trailio-addon",
-  version: "1.0.0",
-  name: "Trailer", // sin tilde
+  version: "1.1.0",
+  name: "Trailer",
   description: "Addon de Stremio para buscar trailers en TMDb con clave por usuario",
   types: ["movie", "series"],
   catalogs: [],
@@ -399,20 +399,18 @@ async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
       v =>
         v.site === 'YouTube' &&
         (v.type === 'Trailer' || v.type === 'Teaser')
-    ) || videosJson.results[0];
+    ) || videosJson.results.find(v => v.site === 'YouTube') || videosJson.results[0];
 
   if (!trailer || trailer.site !== 'YouTube' || !trailer.key) return null;
 
-  const youtubeUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
-
   return {
-    url: youtubeUrl,
+    ytId: trailer.key,
     name,
     year
   };
 }
 
-// /stream usando la clave TMDb y devolviendo externalUrl con título traducido
+// /stream usando la clave TMDb y devolviendo ytId con título traducido
 app.get('/stream/:type/:id.json', async (req, res) => {
   const { type, id } = req.params;
   const { tmdbKey, lang } = req.query;
@@ -433,7 +431,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
       return res.json({ streams: [] });
     }
 
-    const { url, name, year } = data;
+    const { ytId, name, year } = data;
 
     const l = (lang || 'en-US').toLowerCase();
 
@@ -469,7 +467,7 @@ app.get('/stream/:type/:id.json', async (req, res) => {
       streams: [
         {
           title: streamTitle,
-          externalUrl: url
+          ytId: ytId
         }
       ]
     });
