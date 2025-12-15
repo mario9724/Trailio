@@ -187,14 +187,17 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     }
 
     const { url, name, year } = data;
-    const langLabel = lang || 'en-US';
 
-    const titleParts = [];
-    titleParts.push(`Ver tráiler (${langLabel})`);
-    if (name) {
-      titleParts.push(`${name}${year ? ' (' + year + ')' : ''}`);
+    // Línea 1: Ver tráiler / Play trailer según idioma
+    let prefix = 'Ver tráiler';
+    if ((lang || '').toLowerCase().startsWith('en')) {
+      prefix = 'Play trailer';
     }
-    const streamTitle = titleParts.join(' · ');
+
+    // Línea 2: Nombre (Año)
+    const line2 = name ? `${name}${year ? ' (' + year + ')' : ''}` : '';
+
+    const streamTitle = line2 ? `${prefix}\n${line2}` : prefix;
 
     res.json({
       streams: [
