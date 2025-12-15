@@ -390,7 +390,6 @@ app.get('/configure', (req, res) => {
 
         installBtn.addEventListener('click', function () {
           if (!lastUrl) return;
-          // Intento de abrir directamente en Stremio Web / app
           window.location.href = lastUrl;
         });
       </script>
@@ -417,13 +416,14 @@ app.get('/manifest.json', (req, res) => {
 async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
   const language = lang || 'en-US';
 
+  // limpiar id: tt1234567 o tt1234567:1:1 -> tt1234567
   const cleanId = imdbId.split(':')[0];
 
   const findUrl =
-    \`https://api.themoviedb.org/3/find/\${encodeURIComponent(cleanId)}\` +
-    \`?api_key=\${encodeURIComponent(tmdbKey)}\` +
-    \`&language=\${encodeURIComponent(language)}\` +
-    \`&external_source=imdb_id\`;
+    `https://api.themoviedb.org/3/find/${encodeURIComponent(cleanId)}` +
+    `?api_key=${encodeURIComponent(tmdbKey)}` +
+    `&language=${encodeURIComponent(language)}` +
+    `&external_source=imdb_id`;
 
   const findRes = await fetch(findUrl);
   if (!findRes.ok) throw new Error('TMDb find error');
@@ -449,9 +449,9 @@ async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
 
   const kind = type === 'series' ? 'tv' : 'movie';
   const videosUrl =
-    \`https://api.themoviedb.org/3/\${kind}/\${tmdbId}/videos\` +
-    \`?api_key=\${encodeURIComponent(tmdbKey)}\` +
-    \`&language=\${encodeURIComponent(language)}\`;
+    `https://api.themoviedb.org/3/${kind}/${tmdbId}/videos` +
+    `?api_key=${encodeURIComponent(tmdbKey)}` +
+    `&language=${encodeURIComponent(language)}`;
 
   const videosRes = await fetch(videosUrl);
   if (!videosRes.ok) throw new Error('TMDb videos error');
@@ -525,8 +525,8 @@ app.get('/stream/:type/:id.json', async (req, res) => {
       prefix = 'Play trailer for';
     }
 
-    const mainTitle = name ? \`\${name}\${year ? ' (' + year + ')' : ''}\` : '';
-    const streamTitle = mainTitle ? \`\${prefix} \${mainTitle}\` : prefix;
+    const mainTitle = name ? `${name}${year ? ' (' + year + ')' : ''}` : '';
+    const streamTitle = mainTitle ? `${prefix} ${mainTitle}` : prefix;
 
     res.json({
       streams: [
