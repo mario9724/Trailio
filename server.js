@@ -221,6 +221,23 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     return res.json({ streams: [] });
   }
 });
+app.get('/configure', (req, res) => {
+  res.send(`
+    <!doctype html>
+    <html lang="es">
+      <head>
+        <meta charset="utf-8" />
+        <title>Configurar Trailio</title>
+      </head>
+      <body>
+        <h1>Configurar Trailio</h1>
+        <p>1. Crea una cuenta en TMDb y consigue tu API key (v3 auth).</p>
+        <p>2. En Stremio, cuando instales el addon, introduce esta clave en el campo <strong>TMDb API Key</strong>.</p>
+        <p>Si ves esta página dentro de Stremio, simplemente vuelve atrás: la configuración real se hace en la pantalla de Stremio, no aquí.</p>
+      </body>
+    </html>
+  `);
+});
 
 // Web sencilla de instalación / info (opcional)
 app.get('/', (req, res) => {
