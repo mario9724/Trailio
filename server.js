@@ -6,10 +6,10 @@ const PORT = process.env.PORT || 3000;
 
 // Manifest base
 const manifest = {
-  id: "trailio-addon",
-  version: "1.3.1",
-  name: "Trailer",
-  description: "Addon de Stremio para tráiler + making of + explicación del final vía TMDb y SerpAPI (YouTube)",
+  id: "infoplus-addon",
+  version: "1.0.0",
+  name: "Info+",
+  description: "Addon de Stremio que añade tráiler, making of y explicación del final desde YouTube usando TMDb y SerpAPI",
   types: ["movie", "series"],
   catalogs: [],
   resources: ["stream"],
@@ -26,7 +26,7 @@ app.get('/configure', (req, res) => {
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Configurar Trailer</title>
+  <title>Configurar Info+</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root {
@@ -99,15 +99,14 @@ app.get('/configure', (req, res) => {
       display: inline-block;
     }
     .logo-word span:nth-child(1),
-    .logo-word span:nth-child(7) {
+    .logo-word span:nth-child(5) {
       color: #a855f7;
     }
     .logo-word span:nth-child(2),
-    .logo-word span:nth-child(6) {
+    .logo-word span:nth-child(4) {
       color: #c4b5fd;
     }
-    .logo-word span:nth-child(3),
-    .logo-word span:nth-child(5) {
+    .logo-word span:nth-child(3) {
       color: #e5e7eb;
     }
     .logo-chip {
@@ -281,13 +280,13 @@ app.get('/configure', (req, res) => {
   <div class="card">
     <div class="card-inner">
       <div class="logo-row">
-        <div class="logo-word" aria-label="Trailer">
-          <span>T</span><span>R</span><span>A</span><span>I</span><span>L</span><span>E</span><span>R</span>
+        <div class="logo-word" aria-label="Info+">
+          <span>I</span><span>N</span><span>F</span><span>O</span><span>+</span>
         </div>
         <div class="logo-chip">Stremio add-on</div>
       </div>
 
-      <h1>Configura tus claves</h1>
+      <h1>Configura Info+</h1>
       <p class="subtitle">
         Elige tu idioma y añade tus claves para TMDb y SerpAPI (YouTube).
       </p>
@@ -350,7 +349,7 @@ app.get('/configure', (req, res) => {
         <div class="button-row">
           <button class="btn btn-primary" id="generate">
             <span class="button-icon">⚡️</span>
-            <span>Generar URL del add-on</span>
+            <span>Generar URL de Info+</span>
           </button>
           <span class="button-note">
             Copia o instala la URL directamente en Stremio.
@@ -368,7 +367,7 @@ app.get('/configure', (req, res) => {
           El botón intenta abrir la app de Stremio automáticamente.
         </div>
         <button class="btn btn-secondary" id="installBtn" disabled>
-          <span>Instalar en Stremio</span>
+          <span>Instalar Info+ en Stremio</span>
         </button>
       </div>
     </div>
@@ -418,7 +417,7 @@ app.get('/configure', (req, res) => {
 </html>`);
 });
 
-// Manifest dinámico según si hay tmdbKey
+// Manifest dinámico
 app.get('/manifest.json', (req, res) => {
   const { tmdbKey } = req.query;
   const configured = !!tmdbKey;
@@ -463,49 +462,55 @@ function getRegionFromLang(lang) {
   return 'US';
 }
 
-function getTrailerPrefix(lang) {
+// Título del tráiler: "Tráiler de X" según idioma
+function getTrailerTitle(lang, mainTitle) {
   const l = (lang || 'en-US').toLowerCase();
-  if (l.startsWith('es')) return 'Ver tráiler de';
-  if (l.startsWith('pt')) return 'Ver trailer de';
-  if (l.startsWith('fr')) return 'Voir la bande-annonce de';
-  if (l.startsWith('de')) return 'Trailer ansehen von';
-  if (l.startsWith('it')) return 'Guarda il trailer di';
-  if (l.startsWith('ru')) return 'Смотреть трейлер';
-  if (l.startsWith('tr')) return 'Fragmanı izle';
-  if (l.startsWith('pl')) return 'Zobacz zwiastun';
-  if (l.startsWith('zh')) return '观看预告片';
-  if (l.startsWith('ja')) return '予告編を見る';
-  return 'Play trailer for';
+  if (!mainTitle) return '';
+  if (l.startsWith('es')) return `Tráiler de ${mainTitle}`;
+  if (l.startsWith('pt')) return `Trailer de ${mainTitle}`;
+  if (l.startsWith('fr')) return `Bande-annonce de ${mainTitle}`;
+  if (l.startsWith('de')) return `Trailer zu ${mainTitle}`;
+  if (l.startsWith('it')) return `Trailer di ${mainTitle}`;
+  if (l.startsWith('ru')) return `Трейлер ${mainTitle}`;
+  if (l.startsWith('tr')) return `${mainTitle} fragmanı`;
+  if (l.startsWith('pl')) return `Zwiastun ${mainTitle}`;
+  if (l.startsWith('zh')) return `${mainTitle} 预告片`;
+  if (l.startsWith('ja')) return `${mainTitle} の予告編`;
+  return `Trailer for ${mainTitle}`;
 }
 
-function getEndingTitleBase(lang) {
+// Título making of: "Cómo se hizo X" según idioma
+function getMakingTitle(lang, mainTitle) {
   const l = (lang || 'en-US').toLowerCase();
-  if (l.startsWith('es')) return 'Explicación del final';
-  if (l.startsWith('pt')) return 'Final explicado';
-  if (l.startsWith('fr')) return 'Fin expliquée';
-  if (l.startsWith('de')) return 'Ende erklärt';
-  if (l.startsWith('it')) return 'Finale spiegato';
-  if (l.startsWith('ru')) return 'Объяснение концовки';
-  if (l.startsWith('tr')) return 'Finalin açıklaması';
-  if (l.startsWith('pl')) return 'Wyjaśnienie zakończenia';
-  if (l.startsWith('zh')) return '结局解析';
-  if (l.startsWith('ja')) return 'ラスト解説';
-  return 'Ending explained';
+  if (!mainTitle) return '';
+  if (l.startsWith('es')) return `Cómo se hizo ${mainTitle}`;
+  if (l.startsWith('pt')) return `Como foi feito ${mainTitle}`;
+  if (l.startsWith('fr')) return `Making of de ${mainTitle}`;
+  if (l.startsWith('de')) return `Making-of von ${mainTitle}`;
+  if (l.startsWith('it')) return `Come è stato fatto ${mainTitle}`;
+  if (l.startsWith('ru')) return `Как снимали ${mainTitle}`;
+  if (l.startsWith('tr')) return `${mainTitle} nasıl yapıldı`;
+  if (l.startsWith('pl')) return `Jak powstał ${mainTitle}`;
+  if (l.startsWith('zh')) return `${mainTitle} 幕后制作`;
+  if (l.startsWith('ja')) return `${mainTitle} のメイキング`;
+  return `Making of ${mainTitle}`;
 }
 
-function getMakingTitleBase(lang) {
+// Título explicación: "Explicación del final de X" según idioma
+function getEndingTitle(lang, mainTitle) {
   const l = (lang || 'en-US').toLowerCase();
-  if (l.startsWith('es')) return 'Making of / entrevistas';
-  if (l.startsWith('pt')) return 'Making of / entrevistas';
-  if (l.startsWith('fr')) return 'Making of / interviews';
-  if (l.startsWith('de')) return 'Making-of / Interviews';
-  if (l.startsWith('it')) return 'Dietro le quinte / interviste';
-  if (l.startsWith('ru')) return 'За кадром / интервью';
-  if (l.startsWith('tr')) return 'Kamera arkası / röportajlar';
-  if (l.startsWith('pl')) return 'Kulisy / wywiady';
-  if (l.startsWith('zh')) return '幕后花絮 / 访谈';
-  if (l.startsWith('ja')) return 'メイキング / インタビュー';
-  return 'Making of / interviews';
+  if (!mainTitle) return '';
+  if (l.startsWith('es')) return `Explicación del final de ${mainTitle}`;
+  if (l.startsWith('pt')) return `Explicação do final de ${mainTitle}`;
+  if (l.startsWith('fr')) return `Explication de la fin de ${mainTitle}`;
+  if (l.startsWith('de')) return `Erklärung des Endes von ${mainTitle}`;
+  if (l.startsWith('it')) return `Spiegazione del finale di ${mainTitle}`;
+  if (l.startsWith('ru')) return `Объяснение концовки ${mainTitle}`;
+  if (l.startsWith('tr')) return `${mainTitle} finalinin açıklaması`;
+  if (l.startsWith('pl')) return `Wyjaśnienie zakończenia ${mainTitle}`;
+  if (l.startsWith('zh')) return `${mainTitle} 结局解析`;
+  if (l.startsWith('ja')) return `${mainTitle} の結末解説`;
+  return `Ending explained for ${mainTitle}`;
 }
 
 // --------- TMDb: tráiler principal ---------
@@ -577,7 +582,7 @@ async function searchBestYoutubeVideo({ title, year, lang, serpKey, kind }) {
   if (!serpKey || !title) return null;
 
   const langWord = getLangWord(lang);
-  const hl = (lang || 'en-US').split('-')[0].toLowerCase(); // es, en, fr...
+  const hl = (lang || 'en-US').split('-')[0].toLowerCase();
   const gl = getRegionFromLang(lang);
   const isEnglishUser = hl === 'en';
 
@@ -611,7 +616,6 @@ async function searchBestYoutubeVideo({ title, year, lang, serpKey, kind }) {
   const json = await res.json();
 
   const items = (json.video_results || []).slice(0, 10);
-
   if (!items.length) return null;
 
   function parseDurationToSeconds(dur) {
@@ -635,10 +639,8 @@ async function searchBestYoutubeVideo({ title, year, lang, serpKey, kind }) {
 
     let s = 0;
 
-    // Debe contener parte del título
     if (t.includes(titleLower)) s += 5;
 
-    // Palabras clave por tipo
     if (kind === 'ending') {
       if (t.includes('ending explained') || d.includes('ending explained')) s += 8;
       if (t.includes('final explicado') || d.includes('final explicado')) s += 8;
@@ -652,13 +654,8 @@ async function searchBestYoutubeVideo({ title, year, lang, serpKey, kind }) {
       if (duration < 45) s -= 3;
     }
 
-    // Idioma aproximado
     if (t.includes(langWord) || d.includes(langWord)) s += 6;
-
-    // Si el usuario NO es inglés, penalizar explícitamente cosas marcadas como "english"
     if (!isEnglishUser && (t.includes('english') || d.includes('english'))) s -= 4;
-
-    // Penalizar cosas tipo tráiler otra vez
     if (t.includes('trailer') || d.includes('trailer')) s -= 5;
 
     return s;
@@ -675,7 +672,6 @@ async function searchBestYoutubeVideo({ title, year, lang, serpKey, kind }) {
     }
   }
 
-  // Si nada supera un umbral razonable, mejor no devolver nada
   if (!best || bestScore <= 5) return null;
 
   return {
@@ -684,7 +680,7 @@ async function searchBestYoutubeVideo({ title, year, lang, serpKey, kind }) {
   };
 }
 
-// /stream usando TMDb + SerpAPI, devolviendo solo 3 streams máximo
+// /stream: tráiler + explicación + making of
 app.get('/stream/:type/:id.json', async (req, res) => {
   const { type, id } = req.params;
   const { tmdbKey, lang, serpKey } = req.query;
@@ -706,18 +702,18 @@ app.get('/stream/:type/:id.json', async (req, res) => {
     }
 
     const { url, name, year } = baseData;
-    const prefix = getTrailerPrefix(lang);
     const mainTitle = name ? `${name}${year ? ' (' + year + ')' : ''}` : '';
-    const streamTitle = mainTitle ? `${prefix} ${mainTitle}` : prefix;
 
-    const streams = [
-      {
-        title: streamTitle,
+    const streams = [];
+
+    if (url) {
+      const trailerTitle = getTrailerTitle(lang, mainTitle);
+      streams.push({
+        title: trailerTitle || 'Trailer',
         externalUrl: url
-      }
-    ];
+      });
+    }
 
-    // Extras vía SerpAPI (opcionales, 1 para ending y 1 para making)
     if (serpKey && name) {
       try {
         const [ending, making] = await Promise.all([
@@ -726,19 +722,17 @@ app.get('/stream/:type/:id.json', async (req, res) => {
         ]);
 
         if (ending && ending.url) {
-          const base = getEndingTitleBase(lang);
-          const full = mainTitle ? `${base} · ${mainTitle}` : base;
+          const t = getEndingTitle(lang, mainTitle);
           streams.push({
-            title: full,
+            title: t || 'Ending explained',
             externalUrl: ending.url
           });
         }
 
         if (making && making.url) {
-          const base = getMakingTitleBase(lang);
-          const full = mainTitle ? `${base} · ${mainTitle}` : base;
+          const t = getMakingTitle(lang, mainTitle);
           streams.push({
-            title: full,
+            title: t || 'Making of',
             externalUrl: making.url
           });
         }
@@ -756,9 +750,9 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
 // Raíz
 app.get('/', (req, res) => {
-  res.send('Addon Trailer funcionando. Usa /manifest.json o /configure.');
+  res.send('Addon Info+ funcionando. Usa /manifest.json o /configure.');
 });
 
 app.listen(PORT, () => {
-  console.log('Trailer addon running on port ' + PORT);
+  console.log('Info+ addon running on port ' + PORT);
 });
