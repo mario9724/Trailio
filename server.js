@@ -52,6 +52,14 @@ app.get('/configure', (req, res) => {
           <option value="es-ES">es-ES</option>
           <option value="en-US">en-US</option>
           <option value="pt-BR">pt-BR</option>
+          <option value="fr-FR">fr-FR</option>
+          <option value="de-DE">de-DE</option>
+          <option value="it-IT">it-IT</option>
+          <option value="ru-RU">ru-RU</option>
+          <option value="tr-TR">tr-TR</option>
+          <option value="pl-PL">pl-PL</option>
+          <option value="zh-CN">zh-CN</option>
+          <option value="ja-JP">ja-JP</option>
         </select>
       </label>
 
@@ -165,9 +173,9 @@ async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
   };
 }
 
-// /stream usando la clave TMDb y devolviendo externalUrl
+// /stream usando la clave TMDb y devolviendo externalUrl con título traducido
 app.get('/stream/:type/:id.json', async (req, res) => {
-  const { type, id } = req.params; // type: movie|series, id: tt1234567 o tt1234567:1:1
+  const { type, id } = req.params; // movie|series, id: tt1234567 o tt1234567:1:1
   const { tmdbKey, lang } = req.query;
 
   if (!tmdbKey) {
@@ -188,22 +196,49 @@ app.get('/stream/:type/:id.json', async (req, res) => {
 
     const { url, name, year } = data;
 
-    // Línea 1: Ver tráiler / Play trailer según idioma
-    let prefix = 'Ver tráiler';
-    if ((lang || '').toLowerCase().startsWith('en')) {
+    // Normalizar idioma a minúsculas tipo "es", "es-es"
+    const l = (lang || 'en-US').toLowerCase();
+
+    // Traducciones de la primera línea
+    let prefix;
+    if (l.startsWith('es')) {
+      prefix = 'Ver tráiler';
+    } else if (l.startsWith('pt')) {
+      prefix = 'Ver trailer';
+    } else if (l.startsWith('fr')) {
+      prefix = 'Voir la bande-annonce';
+    } else if (l.startsWith('de')) {
+      prefix = 'Trailer ansehen';
+    } else if (l.startsWith('it')) {
+      prefix = 'Guarda il trailer';
+    } else if (l.startsWith('ru')) {
+      prefix = 'Смотреть трейлер';
+    } else if (l.startsWith('tr')) {
+      prefix = 'Fragmanı izle';
+    } else if (l.startsWith('pl')) {
+      prefix = 'Zobacz zwiastun';
+    } else if (l.startsWith('zh')) {
+      prefix = '观看预告片';
+    } else if (l.startsWith('ja')) {
+      prefix = '予告編を見る';
+    } else {
+      // cualquier otro idioma por defecto en inglés
       prefix = 'Play trailer';
     }
 
     // Línea 2: Nombre (Año)
     const line2 = name ? `${name}${year ? ' (' + year + ')' : ''}` : '';
 
+    // Título final:
+    // Ver tráiler
+    // Nombre (Año)
     const streamTitle = line2 ? `${prefix}\n${line2}` : prefix;
 
     res.json({
       streams: [
         {
           title: streamTitle,
-          externalUrl: url   // <‑‑ vuelve a externalUrl
+          externalUrl: url
         }
       ]
     });
