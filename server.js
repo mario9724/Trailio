@@ -173,7 +173,6 @@ app.get('/stream/:type/:id.json', async (req, res) => {
       return res.json({ streams: [] });
     }
 
-    // Devolvemos un stream que abre el tráiler en YouTube
     res.json({
       streams: [
         {
