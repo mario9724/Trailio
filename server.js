@@ -98,35 +98,48 @@ app.get('/manifest.json', (req, res) => {
   });
 });
 
-// Función auxiliar: obtener URL de tráiler de TMDb para un IMDb id
+// Función auxiliar: obtener datos y tráiler de TMDb para un IMDb id
 async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
   const language = lang || 'en-US';
 
+  // limpiar id: tt1234567 o tt1234567:1:1 -> tt1234567
+  const cleanId = imdbId.split(':')[0];
+
   // 1) Buscar el título en TMDb a partir del IMDb ID
-  const findUrl = `https://api.themoviedb.org/3/find/${encodeURIComponent(
-    imdbId
-  )}?api_key=${encodeURIComponent(tmdbKey)}&language=${encodeURIComponent(
-    language
-  )}&external_source=imdb_id`;
+  const findUrl =
+    `https://api.themoviedb.org/3/find/${encodeURIComponent(cleanId)}` +
+    `?api_key=${encodeURIComponent(tmdbKey)}` +
+    `&language=${encodeURIComponent(language)}` +
+    `&external_source=imdb_id`;
 
   const findRes = await fetch(findUrl);
   if (!findRes.ok) throw new Error('TMDb find error');
   const findJson = await findRes.json();
 
   let tmdbId = null;
+  let name = null;
+  let year = null;
+
   if (type === 'movie' && findJson.movie_results && findJson.movie_results.length) {
-    tmdbId = findJson.movie_results[0].id;
+    const m = findJson.movie_results[0];
+    tmdbId = m.id;
+    name = m.title || m.original_title;
+    year = (m.release_date || '').slice(0, 4);
   } else if (type === 'series' && findJson.tv_results && findJson.tv_results.length) {
-    tmdbId = findJson.tv_results[0].id;
+    const s = findJson.tv_results[0];
+    tmdbId = s.id;
+    name = s.name || s.original_name;
+    year = (s.first_air_date || '').slice(0, 4);
   }
 
   if (!tmdbId) return null;
 
   // 2) Obtener vídeos (trailers) del título encontrado
   const kind = type === 'series' ? 'tv' : 'movie';
-  const videosUrl = `https://api.themoviedb.org/3/${kind}/${tmdbId}/videos?api_key=${encodeURIComponent(
-    tmdbKey
-  )}&language=${encodeURIComponent(language)}`;
+  const videosUrl =
+    `https://api.themoviedb.org/3/${kind}/${tmdbId}/videos` +
+    `?api_key=${encodeURIComponent(tmdbKey)}` +
+    `&language=${encodeURIComponent(language)}`;
 
   const videosRes = await fetch(videosUrl);
   if (!videosRes.ok) throw new Error('TMDb videos error');
@@ -144,12 +157,17 @@ async function getTrailerFromTmdb({ imdbId, type, tmdbKey, lang }) {
   if (!trailer || trailer.site !== 'YouTube' || !trailer.key) return null;
 
   const youtubeUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
-  return youtubeUrl;
+
+  return {
+    url: youtubeUrl,
+    name,
+    year
+  };
 }
 
-// /stream usando la clave TMDb y devolviendo el tráiler con url
+// /stream usando la clave TMDb y devolviendo el tráiler con el título pedido
 app.get('/stream/:type/:id.json', async (req, res) => {
-  const { type, id } = req.params; // type: movie|series, id: tt1234567
+  const { type, id } = req.params; // type: movie|series, id: tt1234567 o tt1234567:1:1
   const { tmdbKey, lang } = req.query;
 
   if (!tmdbKey) {
@@ -157,22 +175,32 @@ app.get('/stream/:type/:id.json', async (req, res) => {
   }
 
   try {
-    const youtubeUrl = await getTrailerFromTmdb({
+    const data = await getTrailerFromTmdb({
       imdbId: id,
       type,
       tmdbKey,
       lang
     });
 
-    if (!youtubeUrl) {
+    if (!data) {
       return res.json({ streams: [] });
     }
+
+    const { url, name, year } = data;
+    const langLabel = lang || 'en-US';
+
+    const titleParts = [];
+    titleParts.push(`Ver tráiler (${langLabel})`);
+    if (name) {
+      titleParts.push(`${name}${year ? ' (' + year + ')' : ''}`);
+    }
+    const streamTitle = titleParts.join(' · ');
 
     res.json({
       streams: [
         {
-          title: "Trailio trailer",
-          url: youtubeUrl
+          title: streamTitle,
+          url: url
         }
       ]
     });
